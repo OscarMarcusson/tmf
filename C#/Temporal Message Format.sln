@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.3.32901.215
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Temporal Message Format", "Temporal Message Format\Temporal Message Format.csproj", "{AC5F45B7-10EB-4A46-A808-107E287E2430}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Temporal Message Format", "Temporal Message Format\Temporal Message Format.csproj", "{AC5F45B7-10EB-4A46-A808-107E287E2430}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj", "{CE76AD17-7210-44D1-97E8-0F6A7F89B99E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{AC5F45B7-10EB-4A46-A808-107E287E2430}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AC5F45B7-10EB-4A46-A808-107E287E2430}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AC5F45B7-10EB-4A46-A808-107E287E2430}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CE76AD17-7210-44D1-97E8-0F6A7F89B99E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CE76AD17-7210-44D1-97E8-0F6A7F89B99E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CE76AD17-7210-44D1-97E8-0F6A7F89B99E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CE76AD17-7210-44D1-97E8-0F6A7F89B99E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
