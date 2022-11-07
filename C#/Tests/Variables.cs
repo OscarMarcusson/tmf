@@ -10,7 +10,7 @@ namespace Tests
 		[TestMethod]
 		public void Add()
 		{
-			var parser = new Parser().AddVariable<string>("A");
+			var parser = new Parser();
 			parser.SetValue(ID, "A", "5");
 			Assert.IsTrue(parser.TryGetVariable(ID, "A", out var a), FindError);
 			Assert.AreEqual("5", a, WrongValueError);
@@ -19,7 +19,7 @@ namespace Tests
 		[TestMethod]
 		public void Override()
 		{
-			var parser = new Parser().AddVariable<string>("A");
+			var parser = new Parser();
 			parser.SetValue(ID, "A", "5");
 			Assert.IsTrue(parser.TryGetVariable(ID, "A", out var a), FindError);
 			Assert.AreEqual("5", a, WrongValueError);
