@@ -45,5 +45,11 @@ namespace Tests
 			parser.AddVariable<string>("B", x => Assert.AreEqual("VALUE", x));
 			parser.SetValue(ID, "B", "VALUE");
 		}
+
+		[TestMethod]
+		public void Variable_type_validation()
+		{
+			throw new NotImplementedException();
+		}
 	}
 }
