@@ -1,71 +1,134 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Threading.Tasks;
 
 namespace TemporalMessageFormat
 {
-	public class Parser
+	public class Parser<T> where T : class, new()
 	{
-		readonly Dictionary<string, Section> Sections = new Dictionary<string, Section>();
-		readonly Dictionary<string, Action<string>> VariableParsers = new Dictionary<string, Action<string>>();
+		readonly Dictionary<string, T> Instances = new Dictionary<string, T>();
+		readonly Dictionary<string, Action<T, string>> Setters = new Dictionary<string, Action<T, string>>();
+		public event Action<T>? OnInstanceChanged;
 
-
-
-		public Parser AddVariable<T>(string key,  Action<T>? newValueCallback = null)
+		public Parser()
 		{
-			// TODO:: Add callback
-			return this;
+			var type = typeof(T);
+			
+			var properties = type.GetProperties();
+			foreach (var property in properties)
+				CreateSetter(property.Name, property.PropertyType, property.SetValue);
+
+			var fields = type.GetFields();
+			foreach (var field in fields)
+				CreateSetter(field.Name, field.FieldType, field.SetValue);
 		}
 
-		public Parser AddVariablesFrom<T>(Func<string, string>? keyNameGenerator = null)
-		{
-			if (keyNameGenerator == null)
-				keyNameGenerator = x => x;
 
-			// TODO:: Resolve properties via reflection, call AddVariable for each of them
-			return this;
+		void CreateSetter(string name, Type type, Action<T,object> setter)
+		{
+			if (Nullable.GetUnderlyingType(type) != null)
+				type = Nullable.GetUnderlyingType(type);
+
+			if (type == typeof(string))       Setters[name] = setter;
+
+			else if (type == typeof(bool))    Setters[name] = (instance, raw) => setter(instance, bool.Parse(raw));
+			
+			else if (type == typeof(byte))    Setters[name] = (instance, raw) => setter(instance, byte.Parse(raw));
+			else if (type == typeof(ushort))  Setters[name] = (instance, raw) => setter(instance, ushort.Parse(raw));
+			else if (type == typeof(uint))    Setters[name] = (instance, raw) => setter(instance, uint.Parse(raw));
+			else if (type == typeof(ulong))   Setters[name] = (instance, raw) => setter(instance, ulong.Parse(raw));
+			
+			else if (type == typeof(sbyte))   Setters[name] = (instance, raw) => setter(instance, sbyte.Parse(raw));
+			else if (type == typeof(short))   Setters[name] = (instance, raw) => setter(instance, short.Parse(raw));
+			else if (type == typeof(int))     Setters[name] = (instance, raw) => setter(instance, int.Parse(raw));
+			else if (type == typeof(long))    Setters[name] = (instance, raw) => setter(instance, long.Parse(raw));
+			
+			else if (type == typeof(float))   Setters[name] = (instance, raw) => setter(instance, float.Parse(raw));
+			else if (type == typeof(double))  Setters[name] = (instance, raw) => setter(instance, double.Parse(raw));
+			else if (type == typeof(decimal)) Setters[name] = (instance, raw) => setter(instance, decimal.Parse(raw));
+
+			else if(type.IsEnum) Setters[name] = (instance, raw) => setter(instance, Enum.Parse(type, raw));
+
+			else Setters[name] = (i,v) => throw new NotImplementedException($"The '{name}' variables type '{type.Name}' does not have a setter implementation");
 		}
 
-		public void SetValue(string id, string variable, object? value)
+
+		public async Task Parse(TextReader stream)
 		{
-			if (!Sections.TryGetValue(id, out var section))
+			string? id = null;
+			T? instance = null;
+			var lineNumber = 0;
+			var i = 0;
+			var anyChanged = false;
+			while (true)
 			{
-				section = new Section(id);
-				Sections[id] = section;
+				lineNumber++;
+				var line = await stream.ReadLineAsync();
+				if (line == null)
+					break;
+
+				// Id
+				if (line.StartsWith("#"))
+				{
+					if(instance != null && anyChanged)
+						OnInstanceChanged?.Invoke(instance);
+
+					anyChanged = false;
+					id = line.Substring(1);
+					if(!Instances.TryGetValue(id, out instance))
+					{
+						instance = new T();
+						Instances[id] = instance;
+					}
+				}
+
+				// Validation
+				else if(id == null || instance == null)
+				{
+					throw new Exception($"Message did not start with an ID");
+				}
+				else if(string.IsNullOrWhiteSpace(line))
+				{
+					throw new Exception($"Line {lineNumber} was empty");
+				}
+
+				// Function
+				else if (char.IsDigit(line[0]))
+				{
+
+				}
+
+				// Variable
+				else
+				{
+					i = line.IndexOf(' ');
+					if (i < 0)
+						throw new Exception($"Line {lineNumber} does not have a value");
+
+					var name = line.Substring(0, i);
+					var value = line.Substring(i + 1);
+
+					if(!Setters.TryGetValue(name, out var setter))
+						throw new Exception($"Could not find a variable named '{name}' (line {lineNumber})");
+
+					setter(instance, value);
+					anyChanged = true;
+				}
 			}
 
-			section.Set(variable, value);
+			if (instance != null && anyChanged)
+				OnInstanceChanged?.Invoke(instance);
 		}
 
-		public bool TryGetVariable(string id, string variable, out string? value)
+		public void Parse(string message)
 		{
-			if (!Sections.TryGetValue(id, out var section))
+			using (var stream = new StringReader(message))
 			{
-				value = null;
-				return false;
+				Parse(stream).ConfigureAwait(false).GetAwaiter().GetResult();
 			}
-
-			var response = section.Variables.TryGetValue(variable, out var variableDefinition);
-			value = variableDefinition.Value?.ToString();
-			return response;
 		}
 
-		public bool TryGetVariable<T>(string id, string variable, out T value, T defaultValue = default!)
-		{
-			if (!Sections.TryGetValue(id, out var section))
-			{
-				value = defaultValue;
-				return false;
-			}
-
-			if(!section.Variables.TryGetValue(variable, out var variableDefinition))
-			{
-				value = defaultValue;
-				return false;
-			}
-
-
-			value = (T)variableDefinition.Value;
-			return true;
-		}
+		public bool TryGetInstance(string id, out T instance) => Instances.TryGetValue(id, out instance);
 	}
 }
