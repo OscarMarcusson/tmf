@@ -49,7 +49,13 @@ namespace Tests
 		[TestMethod]
 		public void Variable_type_validation()
 		{
-			throw new NotImplementedException();
+			var parser = new Parser().AddVariable<int>("INT");
+			parser.SetValue(ID, "INT", 5);
+			Assert.IsTrue(parser.TryGetVariable<int>(ID, "INT", out var intValue));
+			Assert.AreEqual(5, intValue);
+
+			Assert.ThrowsException<Exception>(() => parser.SetValue(ID, "INT", "5"));
+			Assert.ThrowsException<Exception>(() => parser.SetValue(ID, "INT", true));
 		}
 	}
 }

@@ -25,7 +25,7 @@ namespace TemporalMessageFormat
 			return this;
 		}
 
-		public void SetValue(string id, string variable, string? value)
+		public void SetValue(string id, string variable, object? value)
 		{
 			if (!Sections.TryGetValue(id, out var section))
 			{
@@ -33,7 +33,7 @@ namespace TemporalMessageFormat
 				Sections[id] = section;
 			}
 
-			section.Variables[variable] = value;
+			section.Set(variable, value);
 		}
 
 		public bool TryGetVariable(string id, string variable, out string? value)
@@ -44,7 +44,28 @@ namespace TemporalMessageFormat
 				return false;
 			}
 
-			return section.Variables.TryGetValue(variable, out value);
+			var response = section.Variables.TryGetValue(variable, out var variableDefinition);
+			value = variableDefinition.Value?.ToString();
+			return response;
+		}
+
+		public bool TryGetVariable<T>(string id, string variable, out T value, T defaultValue = default!)
+		{
+			if (!Sections.TryGetValue(id, out var section))
+			{
+				value = defaultValue;
+				return false;
+			}
+
+			if(!section.Variables.TryGetValue(variable, out var variableDefinition))
+			{
+				value = defaultValue;
+				return false;
+			}
+
+
+			value = (T)variableDefinition.Value;
+			return true;
 		}
 	}
 }
