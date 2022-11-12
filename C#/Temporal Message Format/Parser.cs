@@ -9,6 +9,7 @@ namespace TemporalMessageFormat
 	{
 		readonly Dictionary<string, T> Instances = new Dictionary<string, T>();
 		readonly Dictionary<string, Action<T, string>> Setters = new Dictionary<string, Action<T, string>>();
+		readonly Dictionary<string, List<Function>> Functions = new Dictionary<string, List<Function>>();
 		public event Action<T>? OnInstanceChanged;
 
 		public Parser()
@@ -96,7 +97,13 @@ namespace TemporalMessageFormat
 				// Function
 				else if (char.IsDigit(line[0]))
 				{
-
+					var function = new Function(line);
+					if(!Functions.TryGetValue(id, out var functions))
+					{
+						functions = new List<Function>();
+						Functions[id] = functions;
+					}
+					functions.Add(function);
 				}
 
 				// Variable
@@ -130,5 +137,12 @@ namespace TemporalMessageFormat
 		}
 
 		public bool TryGetInstance(string id, out T instance) => Instances.TryGetValue(id, out instance);
+
+
+
+		// TODO:: Implement
+		public void ClearMemoryBefore(long time) => throw new NotImplementedException();
+
+		public bool TryGetFunctions(string id, out List<Function> functions) => Functions.TryGetValue(id, out functions);
 	}
 }
